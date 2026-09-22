@@ -11,7 +11,7 @@ This repo contains a C++ Unreal project scaffold with runtime-generated arena, t
 Original placeholder source assets live in `SourceArt/`:
 
 - Synthesized WAVs for impacts, block, super riser and menu tick.
-- Additional WAVs for menu confirm/back, round start, KO, wall splat, counter hit, throw hit and rage ready.
+- Additional layered WAVs for menu confirm/back, round start, synthetic announcer-style placeholders, KO, wall splat, counter hit, throw hit and rage ready.
 - Generated PNG concept plates for the stage and both fighters.
 - Generated PNG UI plates, portraits, move icons, VFX sprite sheet and material textures.
 - OBJ blockouts for Zara Vey, Hamza Kade and the Noorabad Rooftop Arena props.

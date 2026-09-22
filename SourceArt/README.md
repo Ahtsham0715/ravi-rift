@@ -4,7 +4,7 @@ Original placeholder source assets for Ravi Rift.
 
 ## Contents
 
-- `Audio/*.wav`: synthesized PCM source sounds for impacts, block, UI, round start, KO, wall splat, counter hit, throw hit, rage ready and super riser.
+- `Audio/*.wav`: layered synthesized PCM source sounds for impacts, block, UI, round start, original announcer-style placeholders, KO, wall splat, counter hit, throw hit, rage ready and super riser.
 - `Concepts/*.png`: generated concept/key-art plates for stage and fighters.
 - `Data/move_list.json`: move-list/frame-data reference for UI and docs.
 - `Characters/*.obj`: simple original blockout meshes for Zara Vey and Hamza Kade.

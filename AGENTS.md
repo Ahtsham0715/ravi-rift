@@ -108,7 +108,8 @@
   - Import into Unreal via `Content/Python/import_source_assets.py` once the editor is available.
 - Audio integration:
   - `RaviCircuitGameMode` loads imported `/Game/RaviCircuit/Audio/*` assets if present.
-  - Menu ticks/confirm/back, hits, blocks, wall splats, KO, throws, counter hits, round starts and super risers play imported sounds when available and safely skip when not imported.
+  - Menu ticks/confirm/back, hits, blocks, wall splats, KO, throws, counter hits, round starts, announcer-style fight/KO/perfect cues and super risers play imported sounds when available and safely skip when not imported.
+  - `Docs/AudioDirection.md` documents the original audio/announcer direction and warns against copying existing fighting-game voices or samples.
 - Controller/haptics:
   - P1 supports keyboard and gamepad.
   - Left stick or D-pad movement, face-button attacks, shoulder/trigger special/super/block and Start pause.

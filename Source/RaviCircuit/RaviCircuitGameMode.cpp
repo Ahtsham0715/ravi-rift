@@ -141,6 +141,14 @@ void ARaviCircuitGameMode::BeginRound()
 	{
 		UGameplayStatics::PlaySound2D(this, RoundStartSound, 0.55f);
 	}
+	FTimerHandle FightCueTimer;
+	GetWorldTimerManager().SetTimer(FightCueTimer, [this]()
+	{
+		if (AnnouncerFightSound)
+		{
+			UGameplayStatics::PlaySound2D(this, AnnouncerFightSound, 0.62f);
+		}
+	}, 0.62f, false);
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 	{
 		PlayHaptics(PC, 0.08f, 0.18f, 0.18f);
@@ -160,6 +168,14 @@ void ARaviCircuitGameMode::EndRound(ARCFighterCharacter* Winner, const FString& 
 	if (KoHitSound && Reason.Contains(TEXT("K.O.")))
 	{
 		UGameplayStatics::PlaySound2D(this, KoHitSound, 0.78f);
+	}
+	if (Reason.Contains(TEXT("K.O.")) && AnnouncerKoSound)
+	{
+		UGameplayStatics::PlaySound2D(this, AnnouncerKoSound, 0.72f);
+	}
+	if (Winner && Winner->Health == Winner->MaxHealth && AnnouncerPerfectSound)
+	{
+		UGameplayStatics::PlaySound2D(this, AnnouncerPerfectSound, 0.72f);
 	}
 	FTimerHandle Timer;
 	if (MatchMode == ERCMatchMode::Training || (P1Rounds < 2 && P2Rounds < 2))
@@ -531,6 +547,9 @@ void ARaviCircuitGameMode::LoadAudioAssets()
 	MenuConfirmSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/menu_confirm.menu_confirm"));
 	MenuBackSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/menu_back.menu_back"));
 	RoundStartSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/round_start.round_start"));
+	AnnouncerFightSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/announcer_fight.announcer_fight"));
+	AnnouncerKoSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/announcer_ko.announcer_ko"));
+	AnnouncerPerfectSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/announcer_perfect.announcer_perfect"));
 	KoHitSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/ko_hit.ko_hit"));
 	WallSplatSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/wall_splat.wall_splat"));
 	CounterHitSound = LoadObject<USoundBase>(nullptr, TEXT("/Game/RaviCircuit/Audio/counter_hit.counter_hit"));

@@ -72,6 +72,9 @@ private:
 	UPROPERTY() TObjectPtr<USoundBase> MenuConfirmSound;
 	UPROPERTY() TObjectPtr<USoundBase> MenuBackSound;
 	UPROPERTY() TObjectPtr<USoundBase> RoundStartSound;
+	UPROPERTY() TObjectPtr<USoundBase> AnnouncerFightSound;
+	UPROPERTY() TObjectPtr<USoundBase> AnnouncerKoSound;
+	UPROPERTY() TObjectPtr<USoundBase> AnnouncerPerfectSound;
 	UPROPERTY() TObjectPtr<USoundBase> KoHitSound;
 	UPROPERTY() TObjectPtr<USoundBase> WallSplatSound;
 	UPROPERTY() TObjectPtr<USoundBase> CounterHitSound;
