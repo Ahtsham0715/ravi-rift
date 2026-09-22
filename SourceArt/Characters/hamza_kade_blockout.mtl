@@ -1,0 +1,20 @@
+newmtl primary
+Kd 0.95 0.22 0.14
+Ks 0.08 0.08 0.08
+Ns 24
+
+newmtl accent
+Kd 0.28 0.95 0.48
+Ks 0.08 0.08 0.08
+Ns 24
+
+newmtl dark
+Kd 0.055 0.03 0.02
+Ks 0.08 0.08 0.08
+Ns 24
+
+newmtl skin
+Kd 0.72 0.46 0.32
+Ks 0.08 0.08 0.08
+Ns 24
+

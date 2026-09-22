@@ -1,0 +1,184 @@
+{
+  "fighters": {
+    "Zara Vey": {
+      "style": "Magnetic kickboxing",
+      "moves": [
+        [
+          "Volt Jab",
+          "high",
+          5,
+          3,
+          13,
+          8,
+          2,
+          7
+        ],
+        [
+          "Relay Cross",
+          "high",
+          7,
+          3,
+          16,
+          10,
+          1,
+          8
+        ],
+        [
+          "Neon Roundhouse",
+          "mid",
+          11,
+          4,
+          22,
+          15,
+          -5,
+          12
+        ],
+        [
+          "Circuit Sweep",
+          "low",
+          15,
+          4,
+          25,
+          13,
+          -9,
+          6
+        ],
+        [
+          "Skyline Upper",
+          "mid launcher",
+          16,
+          3,
+          28,
+          12,
+          -13,
+          18
+        ],
+        [
+          "Polarity Kick",
+          "mid special",
+          13,
+          6,
+          30,
+          20,
+          -8,
+          15
+        ],
+        [
+          "Current Toss",
+          "throw",
+          8,
+          2,
+          36,
+          22,
+          0,
+          26
+        ],
+        [
+          "Monsoon Breaker",
+          "rage super",
+          12,
+          9,
+          66,
+          38,
+          -18,
+          32
+        ]
+      ]
+    },
+    "Hamza Kade": {
+      "style": "Heavy pressure grappling",
+      "moves": [
+        [
+          "Stone Jab",
+          "high",
+          6,
+          3,
+          14,
+          9,
+          1,
+          8
+        ],
+        [
+          "Bazaar Hook",
+          "mid",
+          10,
+          4,
+          19,
+          13,
+          -3,
+          12
+        ],
+        [
+          "Iron Shin",
+          "mid",
+          14,
+          5,
+          25,
+          17,
+          -6,
+          13
+        ],
+        [
+          "Foundation Low",
+          "low",
+          17,
+          4,
+          27,
+          15,
+          -11,
+          8
+        ],
+        [
+          "Forge Lift",
+          "mid launcher",
+          18,
+          4,
+          31,
+          14,
+          -14,
+          17
+        ],
+        [
+          "Truck Art Ram",
+          "mid special",
+          19,
+          6,
+          34,
+          24,
+          -10,
+          18
+        ],
+        [
+          "Gatekeeper Slam",
+          "throw",
+          9,
+          2,
+          40,
+          27,
+          0,
+          32
+        ],
+        [
+          "Lahore Lockdown",
+          "rage super",
+          16,
+          9,
+          72,
+          45,
+          -21,
+          34
+        ]
+      ]
+    }
+  },
+  "columns": [
+    "name",
+    "level",
+    "startup",
+    "active",
+    "recovery",
+    "damage",
+    "block_adv",
+    "hit_adv"
+  ]
+}

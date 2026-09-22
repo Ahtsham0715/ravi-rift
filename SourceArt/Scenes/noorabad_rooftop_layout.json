@@ -1,0 +1,32 @@
+{
+  "name": "Noorabad Rooftop Arena",
+  "mood": "nighttime urban Punjab/Pakistan-inspired rooftop arena",
+  "bounds": {
+    "x": [
+      -720,
+      720
+    ],
+    "y": [
+      -315,
+      315
+    ]
+  },
+  "fighters": [
+    "Zara Vey",
+    "Hamza Kade"
+  ],
+  "source_art": {
+    "boundary": "SourceArt/Stage/noorabad_rooftop_boundary.obj",
+    "neon": "SourceArt/Stage/neon_arch_and_signs.obj",
+    "zara": "SourceArt/Characters/zara_vey_blockout.obj",
+    "hamza": "SourceArt/Characters/hamza_kade_blockout.obj"
+  },
+  "audio": [
+    "SourceArt/Audio/impact_light.wav",
+    "SourceArt/Audio/impact_heavy.wav",
+    "SourceArt/Audio/block_guard.wav",
+    "SourceArt/Audio/super_riser.wav",
+    "SourceArt/Audio/menu_tick.wav"
+  ],
+  "import_notes": "These are original placeholder source assets. Import into Unreal once the editor is available, or keep using the runtime-generated C++ scene."
+}
