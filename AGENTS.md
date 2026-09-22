@@ -24,6 +24,8 @@
 
 ## Current Repo State
 
+- Public GitHub repository: `https://github.com/Ahtsham0715/ravi-rift`
+- Initial commit pushed: `b7611cf` (`Initial Ravi Rift Unreal fighting game slice`)
 - Unreal C++ project scaffold created:
   - `RaviCircuit.uproject`
   - `Config/DefaultEngine.ini`
