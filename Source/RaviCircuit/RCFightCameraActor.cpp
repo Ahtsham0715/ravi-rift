@@ -8,7 +8,7 @@ ARCFightCameraActor::ARCFightCameraActor()
 	PrimaryActorTick.bCanEverTick = true;
 	Camera = CreateDefaultSubobject<UCameraComponent>("FightCamera");
 	SetRootComponent(Camera);
-	Camera->FieldOfView = 48.f;
+	Camera->FieldOfView = 56.f;
 }
 
 void ARCFightCameraActor::Configure(ARCFighterCharacter* InP1, ARCFighterCharacter* InP2)
@@ -36,12 +36,12 @@ void ARCFightCameraActor::Tick(float DeltaSeconds)
 	}
 	const FVector Mid = (P1->GetActorLocation() + P2->GetActorLocation()) * 0.5f;
 	const float Dist = FVector::Dist(P1->GetActorLocation(), P2->GetActorLocation());
-	FVector Target = Mid + FVector(0.f, 720.f + Dist * 0.45f, 285.f + Dist * 0.1f);
+	FVector Target = Mid + FVector(0.f, 1040.f + Dist * 0.28f, 360.f + Dist * 0.08f);
 	if (CinematicTimer > 0.f)
 	{
 		CinematicTimer -= DeltaSeconds;
 		ARCFighterCharacter* Leader = P1->FightState == ERCFighterState::Attack ? P1 : P2;
-		Target = Leader->GetActorLocation() + FVector(-Leader->Facing * 215.f, 270.f, 185.f);
+		Target = Leader->GetActorLocation() + FVector(-Leader->Facing * 250.f, 460.f, 245.f);
 	}
 	if (Shake > 0.f)
 	{
@@ -49,7 +49,6 @@ void ARCFightCameraActor::Tick(float DeltaSeconds)
 		Shake = FMath::Max(0.f, Shake - DeltaSeconds * 2.5f);
 	}
 	SetActorLocation(FMath::VInterpTo(GetActorLocation(), Target, DeltaSeconds, 8.f));
-	const FRotator Look = (Mid + FVector(0.f, 0.f, 120.f) - GetActorLocation()).Rotation();
+	const FRotator Look = (Mid + FVector(0.f, 0.f, 145.f) - GetActorLocation()).Rotation();
 	SetActorRotation(FMath::RInterpTo(GetActorRotation(), Look, DeltaSeconds, 9.f));
 }
-

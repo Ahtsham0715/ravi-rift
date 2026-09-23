@@ -10,10 +10,10 @@ public class RaviCircuit : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"InputCore",
+			"ImageWrapper",
 			"UMG",
 			"Slate",
 			"SlateCore"
 		});
 	}
 }
-

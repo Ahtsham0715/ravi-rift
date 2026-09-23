@@ -36,6 +36,10 @@ if [[ -z "$ENGINE_ROOT" ]]; then
 fi
 
 echo "Using Unreal Engine at: $ENGINE_ROOT"
+if [[ -z "${DEVELOPER_DIR:-}" && -d "/Users/apple/Downloads/Xcode.app/Contents/Developer" ]]; then
+  export DEVELOPER_DIR="/Users/apple/Downloads/Xcode.app/Contents/Developer"
+  echo "Using local Xcode toolchain at: $DEVELOPER_DIR"
+fi
 pushd "$ENGINE_ROOT/Engine/Build/BatchFiles/Mac" >/dev/null
 ./GenerateProjectFiles.sh -project="$PROJECT" -game
 ./Build.sh RaviCircuitEditor Mac Development -Project="$PROJECT" -WaitMutex

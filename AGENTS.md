@@ -15,11 +15,15 @@
 - Unreal Engine and Epic Games Launcher are not installed in `/Applications`, `/Users/Shared/Epic Games`, or nearby user paths.
 - Update after user action: Epic Games Launcher is now installed at `/Applications/Epic Games Launcher.app`.
 - Unreal Engine 5.8 is now installed at `/Users/Shared/Epic Games/UE_5.8`; `GenerateProjectFiles.sh`, `Build.sh`, and `UnrealEditor.app` are present.
+- Unreal Engine 5.6 is installed at `/Users/Shared/Epic Games/UE_5.6` and has an Intel `x86_64` editor binary.
+- UE 5.6 initially showed `Xcode Metal Compiler error: cannot execute tool 'metal' due to missing Metal Toolchain`; fixed by running `xcodebuild -downloadComponent MetalToolchain`, which installed Metal Toolchain `17E188`.
+- Xcode 16.4 was extracted at `/Users/apple/Downloads/Xcode.app`. Even if the GUI app is not installed in `/Applications`, its command-line toolchain works via `DEVELOPER_DIR=/Users/apple/Downloads/Xcode.app/Contents/Developer`; it reports Xcode 16.4 build 16F6 and macOS SDK 15.5.
 - `./Scripts/build_unreal_mac.sh` was fixed to run Epic's Mac scripts from `Engine/Build/BatchFiles/Mac`, then successfully generated project files and built `RaviCircuitEditor`.
 - Disk filled during the UE 5.8 download; disposable user caches were cleared. After build/install cleanup there was roughly 17 GB free. Continue watching disk space.
 - Homebrew does not expose an Unreal/Epic cask here.
 - Xcode is installed: Xcode 26.4 build 17E192.
 - Epic's current UE 5.8 macOS requirements list Xcode 26.4 as incompatible, with Xcode 26.1.1 recommended, but the current editor target did compile with Xcode 26.4.
+- UE 5.6 UBT rejects the current Xcode 26.4 SDK for compiling Mac targets: found SDK `26.4`, min required `15.2.0`, max required `16.9.0`. The local Xcode 16.4 toolchain in Downloads satisfies this with SDK 15.5.
 - `git ls-remote https://github.com/EpicGames/UnrealEngine.git` failed with repository not found, so the current GitHub auth is not linked/authorized for Epic's private Unreal source repository.
 - Official install route requires Epic Games Launcher, Epic sign-in, and EULA acceptance before Unreal can be downloaded. Launcher has been opened for the user.
 
@@ -46,7 +50,7 @@
   - `Scripts/build_unreal_mac.sh`
 - `README.md` documents the install/build blocker and controls.
 - Build helper is restored and executable. On this filesystem the path may display as `scripts/build_unreal_mac.sh`, but `./Scripts/build_unreal_mac.sh` works.
-- Last successful local build: `./Scripts/build_unreal_mac.sh` completed with `Result: Succeeded` and output binary `/Users/Shared/Epic Games/UE_5.8/Engine/Binaries/Mac/UnrealEditor`.
+- Last successful local build: `DEVELOPER_DIR=/Users/apple/Downloads/Xcode.app/Contents/Developer UE_ROOT=/Users/Shared/Epic Games/UE_5.6 ./Scripts/build_unreal_mac.sh` completed with `Result: Succeeded`; the game was launched with UE 5.6 in `-game -windowed` mode.
 
 ## Implemented So Far
 
@@ -127,8 +131,14 @@
   - Left stick or D-pad movement, face-button attacks, shoulder/trigger special/super/block and Start pause.
   - Dynamic force feedback varies by block, light/heavy hit, counter hit, wall splat, round start and super where supported.
 - Concept art integration:
-  - `RCHUD` optionally loads imported `/Game/RaviCircuit/Concepts/*` textures.
-  - Title and match-complete screens draw the stage key art and fighter concept plates if imported; otherwise they fall back to text-only HUD.
+  - `RCHUD` first tries imported `/Game/RaviCircuit/*` textures, then falls back to direct runtime PNG loading from `SourceArt`.
+  - Title and match-complete screens now use generated stage/key art, versus splash, logo plate and fighter concept plates even when Unreal import has not produced `.uasset` files.
+  - Gameplay HUD now draws generated fighter portraits beside the health bars.
+- UE 5.6 visual triage after user screenshot:
+  - Disabled Lumen/global illumination features that produced Intel Mac warnings and poor fallback rendering.
+  - Disabled local split-screen via `bUseSplitscreen=False`; local P2 remains controlled from the shared fight camera instead of spawning a second viewport.
+  - Moved skyline blocks far behind the arena with deterministic placement and removed camera-facing foreground rails/props that were blocking the fight view.
+  - Added extra primitive fighter silhouette details: shoulders, gloves, boots, face guard, chest plate and emissive trim. These are still placeholders, not final skeletal characters.
 - `Docs/AssetPipeline.md` describes import steps and replacement targets for real skeletal/static mesh assets after Unreal Editor is available.
 - Static cleanup performed:
   - Engine entry map is used instead of a missing project map.
@@ -141,16 +151,16 @@
   - Added macOS privacy manifest for modern Xcode packaging expectations.
   - Build helper now distinguishes a missing Unreal install from a partial Epic Launcher install.
   - Generated meshes now prefer `/Engine/BasicShapes/BasicShapeMaterial` and set both `Color` and `BaseColor` params so runtime colors are more likely to appear correctly.
-  - Target files moved to `BuildSettingsVersion.V7` for UE 5.8.
+  - Target files moved to `BuildSettingsVersion.Latest` so UE 5.6 and UE 5.8 can both parse the target rules.
   - UE 5.8 compile fixes added: no-arg input action wrappers, concrete fog component include and point-light component attenuation call.
   - Mac packaging resources generated/kept under `Build/Mac/Resources`, including network server entitlements useful for online hosting.
 
 ## Next Steps
 
-- Full compile currently passes with Unreal 5.8 via `./Scripts/build_unreal_mac.sh`.
+- Full compile currently passes with Unreal 5.6 via `./Scripts/build_unreal_mac.sh`; the script now auto-uses `/Users/apple/Downloads/Xcode.app/Contents/Developer` when `DEVELOPER_DIR` is not already set.
 - Multiplayer compile/QA still needs Unreal: test host via menu key `4`, then run a second client joining `127.0.0.1` via menu key `5`.
-- Monitor Xcode 26.4 closely for packaging/runtime issues because Epic's macOS requirements still recommend Xcode 26.1.1 for UE 5.8, even though the current editor compile succeeds.
-- Import generated assets from an open Unreal Editor session using `Content/Python/import_source_assets.py`; commandlet import needs investigation.
+- Monitor Xcode 26.4 closely for packaging/runtime issues. UE 5.6 builds currently use `/Users/apple/Downloads/Xcode.app` as a non-global Xcode 16.4 toolchain.
+- Import generated assets from an open Unreal Editor session using `Content/Python/import_source_assets.py`; commandlet import needs investigation. Until then, HUD PNGs are loaded straight from `SourceArt` at runtime.
 - Optional later: replace the code-rendered Canvas HUD/menu with a Blueprint or UMG front-end once Unreal Editor is available.
 - Replace procedural placeholder meshes with proper skeletal meshes/animations when asset pipeline is available.
 - Keep this file updated after each major subsystem lands.

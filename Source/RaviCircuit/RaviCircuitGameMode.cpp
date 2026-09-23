@@ -159,18 +159,6 @@ void ARaviCircuitGameMode::SpawnFighters()
 	{
 		PC->Possess(P1);
 	}
-	if (MatchMode == ERCMatchMode::LocalVersus)
-	{
-		APlayerController* P2Controller = UGameplayStatics::GetPlayerController(this, 1);
-		if (!P2Controller)
-		{
-			P2Controller = UGameplayStatics::CreatePlayer(this, 1, true);
-		}
-		if (P2Controller)
-		{
-			P2Controller->Possess(P2);
-		}
-	}
 	if (!FightCamera)
 	{
 		FightCamera = GetWorld()->SpawnActor<ARCFightCameraActor>(ARCFightCameraActor::StaticClass(), FVector(0.f, 720.f, 320.f), FRotator(-12.f, 180.f, 0.f));
@@ -588,36 +576,45 @@ void ARaviCircuitGameMode::BuildArena()
 {
 	GetWorld()->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), FVector::ZeroVector, FRotator(-52.f, -35.f, 0.f));
 	AExponentialHeightFog* Fog = GetWorld()->SpawnActor<AExponentialHeightFog>(AExponentialHeightFog::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
-	Fog->GetComponent()->SetFogDensity(0.018f);
-	Fog->GetComponent()->SetFogInscatteringColor(FLinearColor(0.08f, 0.12f, 0.18f));
-	AddBlock(TEXT("Floor"), FVector(0.f, 0.f, -8.f), FVector(16.f, 8.f, 0.18f), FLinearColor(0.05f, 0.055f, 0.068f));
-	AddBlock(TEXT("LeftWall"), FVector(-795.f, 0.f, 130.f), FVector(0.16f, 8.f, 2.6f), FLinearColor(0.95f, 0.32f, 0.08f), 0.35f);
-	AddBlock(TEXT("RightWall"), FVector(795.f, 0.f, 130.f), FVector(0.16f, 8.f, 2.6f), FLinearColor(0.95f, 0.32f, 0.08f), 0.35f);
-	AddBlock(TEXT("BackRail"), FVector(0.f, -410.f, 60.f), FVector(16.f, 0.14f, 1.1f), FLinearColor(0.06f, 0.065f, 0.08f));
-	AddBlock(TEXT("FrontRail"), FVector(0.f, 410.f, 60.f), FVector(16.f, 0.14f, 1.1f), FLinearColor(0.06f, 0.065f, 0.08f));
-	for (int32 i = 0; i < 42; ++i)
+	Fog->GetComponent()->SetFogDensity(0.010f);
+	Fog->GetComponent()->SetFogInscatteringColor(FLinearColor(0.045f, 0.075f, 0.10f));
+	AddBlock(TEXT("Floor"), FVector(0.f, 0.f, -8.f), FVector(16.f, 8.f, 0.18f), FLinearColor(0.035f, 0.04f, 0.045f));
+	AddBlock(TEXT("MatCenter"), FVector(0.f, 0.f, -2.f), FVector(9.8f, 4.6f, 0.035f), FLinearColor(0.075f, 0.078f, 0.082f), 0.02f);
+	AddBlock(TEXT("LeftWall"), FVector(-795.f, 0.f, 130.f), FVector(0.16f, 8.f, 2.2f), FLinearColor(0.85f, 0.22f, 0.07f), 0.18f);
+	AddBlock(TEXT("RightWall"), FVector(795.f, 0.f, 130.f), FVector(0.16f, 8.f, 2.2f), FLinearColor(0.85f, 0.22f, 0.07f), 0.18f);
+	AddBlock(TEXT("BackRailLow"), FVector(0.f, -430.f, 34.f), FVector(16.f, 0.055f, 0.30f), FLinearColor(0.035f, 0.04f, 0.045f));
+	AddBlock(TEXT("BackNeonTrim"), FVector(0.f, -448.f, 76.f), FVector(15.6f, 0.028f, 0.055f), FLinearColor(0.05f, 0.90f, 1.f), 2.0f);
+	AddBlock(TEXT("LeftNeonTrim"), FVector(-780.f, 0.f, 252.f), FVector(0.035f, 7.5f, 0.07f), FLinearColor(1.f, 0.68f, 0.12f), 1.5f);
+	AddBlock(TEXT("RightNeonTrim"), FVector(780.f, 0.f, 252.f), FVector(0.035f, 7.5f, 0.07f), FLinearColor(1.f, 0.68f, 0.12f), 1.5f);
+	FRandomStream StageRandom(7426);
+	for (int32 i = 0; i < 34; ++i)
 	{
-		const float H = FMath::FRandRange(190.f, 920.f);
-		const float Side = i % 2 == 0 ? -1.f : 1.f;
-		const FVector Loc(FMath::FRandRange(-1250.f, 1250.f), Side * FMath::FRandRange(760.f, 1700.f), H * 0.5f - 12.f);
-		AddBlock(TEXT("CityBlock"), Loc, FVector(FMath::FRandRange(0.8f, 2.4f), FMath::FRandRange(0.8f, 2.3f), H / 100.f), FLinearColor(FMath::FRandRange(0.035f, 0.13f), FMath::FRandRange(0.04f, 0.12f), FMath::FRandRange(0.075f, 0.18f)));
-		if (i % 3 == 0)
+		float X = FMath::Lerp(-1850.f, 1850.f, static_cast<float>(i) / 33.f) + StageRandom.FRandRange(-35.f, 35.f);
+		if (FMath::Abs(X) < 520.f)
 		{
-			AddBlock(TEXT("NeonSign"), Loc + FVector(0.f, -Side * 56.f, FMath::FRandRange(-H * 0.22f, H * 0.25f)), FVector(0.9f, 0.05f, 0.22f), i % 2 ? FLinearColor(0.05f, 0.9f, 1.f) : FLinearColor(1.f, 0.74f, 0.08f), 2.2f);
+			X += X < 0.f ? -520.f : 520.f;
+		}
+		const float H = StageRandom.FRandRange(160.f, 520.f);
+		const float Y = -1700.f - StageRandom.FRandRange(0.f, 520.f);
+		const FVector Loc(X, Y, H * 0.5f - 40.f);
+		AddBlock(TEXT("CityBlock"), Loc, FVector(StageRandom.FRandRange(0.45f, 1.10f), StageRandom.FRandRange(0.22f, 0.62f), H / 135.f), FLinearColor(StageRandom.FRandRange(0.018f, 0.055f), StageRandom.FRandRange(0.025f, 0.065f), StageRandom.FRandRange(0.045f, 0.11f)));
+		if (i % 4 == 0)
+		{
+			AddBlock(TEXT("NeonSign"), Loc + FVector(0.f, 36.f, StageRandom.FRandRange(-H * 0.14f, H * 0.16f)), FVector(0.42f, 0.025f, 0.09f), i % 2 ? FLinearColor(0.05f, 0.9f, 1.f) : FLinearColor(1.f, 0.68f, 0.08f), 1.8f);
 		}
 	}
-	for (int32 i = 0; i < 10; ++i)
+	for (int32 i = 0; i < 8; ++i)
 	{
-		APointLight* Light = GetWorld()->SpawnActor<APointLight>(APointLight::StaticClass(), FVector(FMath::FRandRange(-720.f, 720.f), FMath::FRandRange(-390.f, 390.f), FMath::FRandRange(260.f, 460.f)), FRotator::ZeroRotator);
+		APointLight* Light = GetWorld()->SpawnActor<APointLight>(APointLight::StaticClass(), FVector(StageRandom.FRandRange(-620.f, 620.f), StageRandom.FRandRange(-330.f, 260.f), StageRandom.FRandRange(360.f, 620.f)), FRotator::ZeroRotator);
 		Light->GetLightComponent()->SetLightColor(i % 3 == 0 ? FLinearColor(0.2f, 0.85f, 1.f) : i % 3 == 1 ? FLinearColor(1.f, 0.68f, 0.22f) : FLinearColor(0.9f, 0.12f, 0.28f));
-		Light->GetLightComponent()->SetIntensity(1700.f);
-		Light->PointLightComponent->SetAttenuationRadius(620.f);
+		Light->GetLightComponent()->SetIntensity(1100.f);
+		Light->PointLightComponent->SetAttenuationRadius(560.f);
 	}
-	for (int32 i = 0; i < 12; ++i)
+	for (int32 i = 0; i < 8; ++i)
 	{
-		const float X = i % 2 == 0 ? FMath::FRandRange(-700.f, -520.f) : FMath::FRandRange(520.f, 700.f);
-		const float Y = FMath::FRandRange(-330.f, 330.f);
-		UStaticMeshComponent* Prop = AddBlock(TEXT("ReactiveLantern"), FVector(X, Y, FMath::FRandRange(95.f, 190.f)), FVector(0.22f, 0.08f, 0.22f), i % 2 == 0 ? FLinearColor(1.f, 0.74f, 0.08f) : FLinearColor(0.05f, 0.9f, 1.f), 1.8f);
+		const float X = i % 2 == 0 ? StageRandom.FRandRange(-720.f, -560.f) : StageRandom.FRandRange(560.f, 720.f);
+		const float Y = i < 4 ? StageRandom.FRandRange(-360.f, -220.f) : StageRandom.FRandRange(220.f, 360.f);
+		UStaticMeshComponent* Prop = AddBlock(TEXT("ReactiveLantern"), FVector(X, Y, StageRandom.FRandRange(88.f, 150.f)), FVector(0.18f, 0.06f, 0.18f), i % 2 == 0 ? FLinearColor(1.f, 0.62f, 0.08f) : FLinearColor(0.05f, 0.8f, 1.f), 1.35f);
 		Prop->SetMobility(EComponentMobility::Movable);
 		ReactiveProps.Add(Prop);
 	}

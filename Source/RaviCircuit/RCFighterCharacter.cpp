@@ -570,14 +570,24 @@ void ARCFighterCharacter::BuildVisuals()
 	UMaterialInstanceDynamic* Accent = MakeMaterial(Spec.Accent, 0.35f);
 	UMaterialInstanceDynamic* Dark = MakeMaterial(Spec.Dark, 0.02f);
 	UMaterialInstanceDynamic* Skin = MakeMaterial(PlayerIndex == 0 ? FLinearColor(0.66f, 0.42f, 0.31f) : FLinearColor(0.72f, 0.46f, 0.32f), 0.f);
+	UMaterialInstanceDynamic* Trim = MakeMaterial(PlayerIndex == 0 ? FLinearColor(0.04f, 0.85f, 1.f) : FLinearColor(1.f, 0.18f, 0.10f), 0.75f);
 	const float S = Spec.BodyScale;
-	Torso = AddPart(TEXT("Torso"), Sphere, Primary, FVector(0, 0, 122), FVector(0.58f, 0.36f, 0.92f) * S);
-	Head = AddPart(TEXT("Head"), Sphere, Skin, FVector(0, 0, 210), FVector(0.34f, 0.34f, 0.38f) * S);
-	LeftArm = AddPart(TEXT("LeftArm"), Cylinder, Accent, FVector(0, -48, 138), FVector(0.16f, 0.16f, 0.58f) * S);
-	RightArm = AddPart(TEXT("RightArm"), Cylinder, Accent, FVector(0, 48, 138), FVector(0.16f, 0.16f, 0.58f) * S);
-	LeftLeg = AddPart(TEXT("LeftLeg"), Cylinder, Dark, FVector(0, -24, 54), FVector(0.18f, 0.18f, 0.62f) * S);
-	RightLeg = AddPart(TEXT("RightLeg"), Cylinder, Dark, FVector(0, 24, 54), FVector(0.18f, 0.18f, 0.62f) * S);
-	Sash = AddPart(TEXT("Sash"), Cube, Accent, FVector(-4, 0, 108), FVector(0.12f, 0.82f, 0.08f) * S);
+	const bool bPowerBuild = PlayerIndex == 1;
+	Torso = AddPart(TEXT("Torso"), Sphere, Primary, FVector(0, 0, 126), FVector(bPowerBuild ? 0.70f : 0.54f, bPowerBuild ? 0.44f : 0.34f, bPowerBuild ? 0.88f : 0.82f) * S);
+	Head = AddPart(TEXT("Head"), Sphere, Skin, FVector(0, 0, bPowerBuild ? 215 : 208), FVector(0.31f, 0.31f, 0.35f) * S);
+	AddPart(TEXT("ChestPlate"), Cube, Dark, FVector(-12, 0, 142), FVector(0.06f, bPowerBuild ? 0.55f : 0.44f, 0.34f) * S);
+	AddPart(TEXT("FaceGuard"), Cube, Trim, FVector(-27, 0, bPowerBuild ? 216 : 209), FVector(0.035f, 0.20f, 0.055f) * S);
+	AddPart(TEXT("LeftShoulder"), Sphere, Accent, FVector(0, -47, 158), FVector(0.24f, 0.20f, 0.20f) * S);
+	AddPart(TEXT("RightShoulder"), Sphere, Accent, FVector(0, 47, 158), FVector(0.24f, 0.20f, 0.20f) * S);
+	LeftArm = AddPart(TEXT("LeftArm"), Cylinder, Accent, FVector(0, -67, 130), FVector(0.13f, 0.13f, 0.48f) * S);
+	RightArm = AddPart(TEXT("RightArm"), Cylinder, Accent, FVector(0, 67, 130), FVector(0.13f, 0.13f, 0.48f) * S);
+	AddPart(TEXT("LeftGlove"), Sphere, Trim, FVector(20, -96, 122), FVector(0.22f, 0.20f, 0.18f) * S);
+	AddPart(TEXT("RightGlove"), Sphere, Trim, FVector(20, 96, 122), FVector(0.22f, 0.20f, 0.18f) * S);
+	LeftLeg = AddPart(TEXT("LeftLeg"), Cylinder, Dark, FVector(0, -25, 55), FVector(0.16f, 0.16f, 0.64f) * S);
+	RightLeg = AddPart(TEXT("RightLeg"), Cylinder, Dark, FVector(0, 25, 55), FVector(0.16f, 0.16f, 0.64f) * S);
+	AddPart(TEXT("LeftBoot"), Cube, Trim, FVector(22, -27, 12), FVector(0.34f, 0.18f, 0.12f) * S);
+	AddPart(TEXT("RightBoot"), Cube, Trim, FVector(22, 27, 12), FVector(0.34f, 0.18f, 0.12f) * S);
+	Sash = AddPart(TEXT("Sash"), Cube, Trim, FVector(-6, 0, 111), FVector(0.10f, bPowerBuild ? 0.95f : 0.78f, 0.065f) * S);
 }
 
 UStaticMeshComponent* ARCFighterCharacter::AddPart(const TCHAR* Name, UStaticMesh* Mesh, UMaterialInterface* Mat, FVector Loc, FVector Scale)
@@ -615,8 +625,8 @@ void ARCFighterCharacter::AnimatePose(float DeltaSeconds)
 	BodyRoot->SetRelativeLocation(FVector(0, 0, Bob));
 	const float AttackAlpha = FightState == ERCFighterState::Attack ? FMath::Sin(FMath::Clamp(static_cast<float>(MoveFrame) / FMath::Max(1, CurrentMove.TotalFrames()), 0.f, 1.f) * PI) : 0.f;
 	const float StunAlpha = (FightState == ERCFighterState::HitStun || FightState == ERCFighterState::BlockStun) ? 1.f : 0.f;
-	RightArm->SetRelativeRotation(FMath::RInterpTo(RightArm->GetRelativeRotation(), FRotator(80.f * AttackAlpha, 0.f, -35.f * StunAlpha), DeltaSeconds, 12.f));
-	LeftArm->SetRelativeRotation(FMath::RInterpTo(LeftArm->GetRelativeRotation(), FRotator(-48.f * AttackAlpha, 0.f, 28.f * StunAlpha), DeltaSeconds, 12.f));
+	RightArm->SetRelativeRotation(FMath::RInterpTo(RightArm->GetRelativeRotation(), FRotator(54.f * AttackAlpha, 0.f, 82.f - 35.f * StunAlpha), DeltaSeconds, 12.f));
+	LeftArm->SetRelativeRotation(FMath::RInterpTo(LeftArm->GetRelativeRotation(), FRotator(-40.f * AttackAlpha, 0.f, -82.f + 28.f * StunAlpha), DeltaSeconds, 12.f));
 	const bool bKickPose = CurrentMoveId == "Kick" || CurrentMoveId == "Low" || CurrentMoveId == "Special";
 	RightLeg->SetRelativeRotation(FMath::RInterpTo(RightLeg->GetRelativeRotation(), FRotator(bKickPose ? -62.f * AttackAlpha : 0.f, 0.f, 0.f), DeltaSeconds, 10.f));
 	Torso->SetRelativeRotation(FMath::RInterpTo(Torso->GetRelativeRotation(), FRotator(0.f, 0.f, -14.f * Facing * AttackAlpha + 10.f * StunAlpha), DeltaSeconds, 9.f));
