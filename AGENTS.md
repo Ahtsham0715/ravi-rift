@@ -14,11 +14,12 @@
 - Godot 4.7.2 is installed but was rejected by the user. Temporary Godot files were removed.
 - Unreal Engine and Epic Games Launcher are not installed in `/Applications`, `/Users/Shared/Epic Games`, or nearby user paths.
 - Update after user action: Epic Games Launcher is now installed at `/Applications/Epic Games Launcher.app`.
-- Unreal Engine 5.8 install has started at `/Users/Shared/Epic Games/UE_5.8`, but at last check it only contained Epic's partial install data and no `GenerateProjectFiles.sh`, `Build.sh`, or `UnrealEditor.app`.
-- `./Scripts/build_unreal_mac.sh` now detects this partial install and reports that Epic Games Launcher is likely still downloading or verifying the engine.
+- Unreal Engine 5.8 is now installed at `/Users/Shared/Epic Games/UE_5.8`; `GenerateProjectFiles.sh`, `Build.sh`, and `UnrealEditor.app` are present.
+- `./Scripts/build_unreal_mac.sh` was fixed to run Epic's Mac scripts from `Engine/Build/BatchFiles/Mac`, then successfully generated project files and built `RaviCircuitEditor`.
+- Disk filled during the UE 5.8 download; disposable user caches were cleared. After build/install cleanup there was roughly 17 GB free. Continue watching disk space.
 - Homebrew does not expose an Unreal/Epic cask here.
 - Xcode is installed: Xcode 26.4 build 17E192.
-- Epic's current UE 5.8 macOS requirements list Xcode 26.4 as incompatible, with Xcode 26.1.1 recommended.
+- Epic's current UE 5.8 macOS requirements list Xcode 26.4 as incompatible, with Xcode 26.1.1 recommended, but the current editor target did compile with Xcode 26.4.
 - `git ls-remote https://github.com/EpicGames/UnrealEngine.git` failed with repository not found, so the current GitHub auth is not linked/authorized for Epic's private Unreal source repository.
 - Official install route requires Epic Games Launcher, Epic sign-in, and EULA acceptance before Unreal can be downloaded. Launcher has been opened for the user.
 
@@ -45,6 +46,7 @@
   - `Scripts/build_unreal_mac.sh`
 - `README.md` documents the install/build blocker and controls.
 - Build helper is restored and executable. On this filesystem the path may display as `scripts/build_unreal_mac.sh`, but `./Scripts/build_unreal_mac.sh` works.
+- Last successful local build: `./Scripts/build_unreal_mac.sh` completed with `Result: Succeeded` and output binary `/Users/Shared/Epic Games/UE_5.8/Engine/Binaries/Mac/UnrealEditor`.
 
 ## Implemented So Far
 
@@ -72,8 +74,17 @@
   - `1` starts Arcade / VS CPU.
   - `2` starts Local Versus.
   - `3` starts Training.
+  - `4` hosts an online listen-server match.
+  - `5` joins `127.0.0.1` for local online-client testing.
   - `Q` / `E` swap P1/P2 fighters before match start.
   - Post-match screen supports `R` rematch and `M`/Esc main menu.
+- Single-player and multiplayer support:
+  - Arcade / VS CPU and Training cover single-player.
+  - Local Versus creates/possesses a second local player controller for same-machine multiplayer.
+  - Online Host/Join is scaffolded through Unreal listen-server travel.
+  - `ARCFighterCharacter` replicates fighter state and sends client move/input data to the server with RPCs.
+  - `ARaviCircuitGameMode::PostLogin` assigns a remote challenger to P2 and sets the fight camera.
+  - This is not final rollback netcode yet; see `Docs/MultiplayerPlan.md`.
 - Training mode improved:
   - Training dummy no longer runs CPU behavior by default.
   - `F` resets positions/health.
@@ -106,6 +117,7 @@
   - Regenerate base assets via `python3 Tools/generate_source_assets.py`.
   - Regenerate derived UI/texture/data assets via `python3 Tools/generate_derived_assets.py`.
   - Import into Unreal via `Content/Python/import_source_assets.py` once the editor is available.
+  - Attempted unattended import with `UnrealEditor-Cmd -run=pythonscript`; it hung without logs or `.uasset` output, so use the editor Python console for import unless the commandlet path is debugged.
 - Audio integration:
   - `RaviCircuitGameMode` loads imported `/Game/RaviCircuit/Audio/*` assets if present.
   - Menu ticks/confirm/back, hits, blocks, wall splats, KO, throws, counter hits, round starts, announcer-style fight/KO/perfect cues and super risers play imported sounds when available and safely skip when not imported.
@@ -129,12 +141,16 @@
   - Added macOS privacy manifest for modern Xcode packaging expectations.
   - Build helper now distinguishes a missing Unreal install from a partial Epic Launcher install.
   - Generated meshes now prefer `/Engine/BasicShapes/BasicShapeMaterial` and set both `Color` and `BaseColor` params so runtime colors are more likely to appear correctly.
+  - Target files moved to `BuildSettingsVersion.V7` for UE 5.8.
+  - UE 5.8 compile fixes added: no-arg input action wrappers, concrete fog component include and point-light component attenuation call.
+  - Mac packaging resources generated/kept under `Build/Mac/Resources`, including network server entitlements useful for online hosting.
 
 ## Next Steps
 
-- Run best-effort static checks locally. Full compile requires Unreal installation.
-- Once Unreal is installed, run `./Scripts/build_unreal_mac.sh`, then fix any UBT/API errors from the first real compile.
-- If installing UE 5.8, address the Xcode blocker first or expect compile failures: Epic's macOS requirements page says Xcode 26.4 is not compatible with UE 5.8 and recommends Xcode 26.1.1.
+- Full compile currently passes with Unreal 5.8 via `./Scripts/build_unreal_mac.sh`.
+- Multiplayer compile/QA still needs Unreal: test host via menu key `4`, then run a second client joining `127.0.0.1` via menu key `5`.
+- Monitor Xcode 26.4 closely for packaging/runtime issues because Epic's macOS requirements still recommend Xcode 26.1.1 for UE 5.8, even though the current editor compile succeeds.
+- Import generated assets from an open Unreal Editor session using `Content/Python/import_source_assets.py`; commandlet import needs investigation.
 - Optional later: replace the code-rendered Canvas HUD/menu with a Blueprint or UMG front-end once Unreal Editor is available.
 - Replace procedural placeholder meshes with proper skeletal meshes/animations when asset pipeline is available.
 - Keep this file updated after each major subsystem lands.

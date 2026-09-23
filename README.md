@@ -6,7 +6,7 @@ Quality target: a rival-grade modern 3D arena fighter with serious frame-data co
 
 ## Current Build State
 
-This repo contains a C++ Unreal project scaffold with runtime-generated arena, two original fighters, data-driven frame moves, combat state machine, AI, local keyboard P2 controls, title/menu flow, HUD, camera, hit VFX and training instrumentation.
+This repo contains a C++ Unreal project scaffold with runtime-generated arena, two original fighters, data-driven frame moves, combat state machine, AI, single-player arcade/training modes, local multiplayer, listen-server online multiplayer scaffolding, title/menu flow, HUD, camera, hit VFX and training instrumentation.
 
 Original placeholder source assets live in `SourceArt/`:
 
@@ -30,7 +30,7 @@ After Unreal Editor is available, import the source assets from the editor Pytho
 py Content/Python/import_source_assets.py
 ```
 
-Unreal Engine is not installed on this machine. Epic's official installer requires Epic Games Launcher sign-in and EULA acceptance before the engine download begins. Epic's current macOS requirements also list Xcode 26.4 as incompatible with UE 5.8, while this machine currently has Xcode 26.4.
+Unreal Engine 5.8 is installed at `/Users/Shared/Epic Games/UE_5.8` on this machine, and the editor target has compiled successfully with Xcode 26.4. Epic's published UE 5.8 macOS notes still recommend an older Xcode, so keep an eye on packaging/runtime issues even though the current C++ build passes.
 
 ## Build Once Unreal Is Installed
 
@@ -42,9 +42,20 @@ Install a compatible Unreal Engine version through Epic Games Launcher, then run
 
 The script searches common macOS Unreal install locations, generates Xcode project files, and builds the editor target.
 
+Last verified locally with UE 5.8:
+
+```sh
+Result: Succeeded
+Output binary: /Users/Shared/Epic Games/UE_5.8/Engine/Binaries/Mac/UnrealEditor
+```
+
 ## Controls
 
-Menu: `1` Arcade / VS CPU, `2` Local Versus, `3` Training, `Q` swap P1, `E` swap P2.
+Menu: `1` Arcade / VS CPU, `2` Local Versus, `3` Training, `4` Host Online, `5` Join 127.0.0.1, `Q` swap P1, `E` swap P2.
+
+Single-player: Arcade / VS CPU and Training are playable from the front-end.
+
+Multiplayer: Local Versus supports two local players. Online Host/Join opens a listen-server match and replicates fighter state with server-authoritative combat input; see `Docs/MultiplayerPlan.md` for the current scope and future rollback/session work.
 
 P1: WASD movement/crouch/jump, Q/E sidestep, J punch, K kick, L low, U throw, I special, O super, Shift block.
 

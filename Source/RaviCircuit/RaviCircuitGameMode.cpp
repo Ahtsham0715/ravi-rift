@@ -4,6 +4,7 @@
 #include "RCFighterCharacter.h"
 #include "RCHUD.h"
 #include "Camera/CameraComponent.h"
+#include "Components/ExponentialHeightFogComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DirectionalLight.h"
@@ -25,6 +26,17 @@ ARaviCircuitGameMode::ARaviCircuitGameMode()
 	HUDClass = ARCHUD::StaticClass();
 }
 
+void ARaviCircuitGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
+	const FString RaviMode = UGameplayStatics::ParseOption(Options, TEXT("RaviMode"));
+	if (RaviMode == TEXT("OnlineHost"))
+	{
+		StartupMode = ERCMatchMode::OnlineHost;
+		bStartMatchOnBeginPlay = true;
+	}
+}
+
 void ARaviCircuitGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -32,7 +44,14 @@ void ARaviCircuitGameMode::BeginPlay()
 	RuntimeHud = Cast<ARCHUD>(UGameplayStatics::GetPlayerController(this, 0)->GetHUD());
 	LoadAudioAssets();
 	BuildArena();
-	ReturnToFrontEnd();
+	if (bStartMatchOnBeginPlay)
+	{
+		StartMatch(StartupMode);
+	}
+	else
+	{
+		ReturnToFrontEnd();
+	}
 }
 
 void ARaviCircuitGameMode::Tick(float DeltaSeconds)
@@ -58,7 +77,7 @@ void ARaviCircuitGameMode::Tick(float DeltaSeconds)
 	{
 		bPausedMatch = !bPausedMatch;
 	}
-	if (P2)
+	if (P2 && (MatchMode == ERCMatchMode::LocalVersus || MatchMode == ERCMatchMode::Training))
 	{
 		P2->ApplyP2KeyboardInput(PC, DeltaSeconds);
 	}
@@ -98,6 +117,30 @@ void ARaviCircuitGameMode::StartMatch(ERCMatchMode NewMode)
 	BeginRound();
 }
 
+void ARaviCircuitGameMode::HostOnlineMatch()
+{
+	PlayMenuConfirm();
+	MatchMode = ERCMatchMode::OnlineHost;
+	Announcement = TEXT("HOSTING ONLINE VERSUS");
+	AnnouncementTimer = 1.5f;
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		PC->ConsoleCommand(TEXT("open /Engine/Maps/Entry?RaviMode=OnlineHost?listen"));
+	}
+}
+
+void ARaviCircuitGameMode::JoinOnlineMatch(const FString& Address)
+{
+	PlayMenuConfirm();
+	MatchMode = ERCMatchMode::OnlineClient;
+	Announcement = TEXT("JOINING ONLINE VERSUS");
+	AnnouncementTimer = 1.5f;
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		PC->ConsoleCommand(FString::Printf(TEXT("open %s"), *Address));
+	}
+}
+
 void ARaviCircuitGameMode::SpawnFighters()
 {
 	if (P1) { P1->Destroy(); }
@@ -116,6 +159,18 @@ void ARaviCircuitGameMode::SpawnFighters()
 	{
 		PC->Possess(P1);
 	}
+	if (MatchMode == ERCMatchMode::LocalVersus)
+	{
+		APlayerController* P2Controller = UGameplayStatics::GetPlayerController(this, 1);
+		if (!P2Controller)
+		{
+			P2Controller = UGameplayStatics::CreatePlayer(this, 1, true);
+		}
+		if (P2Controller)
+		{
+			P2Controller->Possess(P2);
+		}
+	}
 	if (!FightCamera)
 	{
 		FightCamera = GetWorld()->SpawnActor<ARCFightCameraActor>(ARCFightCameraActor::StaticClass(), FVector(0.f, 720.f, 320.f), FRotator(-12.f, 180.f, 0.f));
@@ -124,6 +179,29 @@ void ARaviCircuitGameMode::SpawnFighters()
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
 	{
 		PC->SetViewTarget(FightCamera);
+	}
+}
+
+void ARaviCircuitGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	if (!NewPlayer || MatchMode != ERCMatchMode::OnlineHost || !P1 || !P2)
+	{
+		return;
+	}
+	if (!P1->GetController())
+	{
+		NewPlayer->Possess(P1);
+	}
+	else if (P1->GetController() != NewPlayer && !P2->GetController())
+	{
+		NewPlayer->Possess(P2);
+		Announcement = TEXT("ONLINE CHALLENGER CONNECTED");
+		AnnouncementTimer = 1.5f;
+	}
+	if (FightCamera)
+	{
+		NewPlayer->SetViewTarget(FightCamera);
 	}
 }
 
@@ -251,6 +329,14 @@ void ARaviCircuitGameMode::HandleFrontEndInput(APlayerController* PC)
 	{
 		PlayMenuConfirm();
 		StartMatch(ERCMatchMode::Training);
+	}
+	else if (PC->WasInputKeyJustPressed(EKeys::Four))
+	{
+		HostOnlineMatch();
+	}
+	else if (PC->WasInputKeyJustPressed(EKeys::Five))
+	{
+		JoinOnlineMatch();
 	}
 	else if (PC->WasInputKeyJustPressed(EKeys::Q))
 	{
@@ -452,7 +538,7 @@ FString ARaviCircuitGameMode::FrontEndLine() const
 	const FRCFighterSpec* P2Spec = FighterSpecs.Find(P2Id);
 	const FString P1Name = P1Spec ? P1Spec->DisplayName.ToString() : P1Id.ToString();
 	const FString P2Name = P2Spec ? P2Spec->DisplayName.ToString() : P2Id.ToString();
-	return FString::Printf(TEXT("1 Arcade / VS CPU    2 Local Versus    3 Training\nQ swap P1: %s    E swap P2: %s\nV hit VFX: %s    C camera shake: %s\nEsc quit"),
+	return FString::Printf(TEXT("1 Arcade / VS CPU    2 Local Versus    3 Training\n4 Host Online    5 Join 127.0.0.1\nQ swap P1: %s    E swap P2: %s\nV hit VFX: %s    C camera shake: %s\nEsc quit"),
 		*P1Name,
 		*P2Name,
 		bHitVfxEnabled ? TEXT("on") : TEXT("off"),
@@ -525,7 +611,7 @@ void ARaviCircuitGameMode::BuildArena()
 		APointLight* Light = GetWorld()->SpawnActor<APointLight>(APointLight::StaticClass(), FVector(FMath::FRandRange(-720.f, 720.f), FMath::FRandRange(-390.f, 390.f), FMath::FRandRange(260.f, 460.f)), FRotator::ZeroRotator);
 		Light->GetLightComponent()->SetLightColor(i % 3 == 0 ? FLinearColor(0.2f, 0.85f, 1.f) : i % 3 == 1 ? FLinearColor(1.f, 0.68f, 0.22f) : FLinearColor(0.9f, 0.12f, 0.28f));
 		Light->GetLightComponent()->SetIntensity(1700.f);
-		Light->GetLightComponent()->SetAttenuationRadius(620.f);
+		Light->PointLightComponent->SetAttenuationRadius(620.f);
 	}
 	for (int32 i = 0; i < 12; ++i)
 	{

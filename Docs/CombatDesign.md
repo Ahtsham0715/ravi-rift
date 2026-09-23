@@ -31,3 +31,4 @@ Heavy pressure grappler. Strengths are damage, throws, shoulder pressure and wal
 - Training input history with directional notation.
 - Hitbox/hurtbox debug view once Unreal compiles.
 - Animation notify migration once skeletal animations exist.
+- Production multiplayer layer: session browser plus rollback or tuned input-delay netcode after the Unreal compile baseline is stable.

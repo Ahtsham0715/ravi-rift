@@ -13,7 +13,7 @@ The game currently runs from C++ generated primitives and optional imported sour
 
 1. Run `python3 Tools/generate_source_assets.py` if source assets need regeneration.
 2. Open the project in Unreal Editor.
-3. Run `Content/Python/import_source_assets.py` from the editor Python console or command line.
+3. Run `Content/Python/import_source_assets.py` from the editor Python console. The attempted unattended `UnrealEditor-Cmd -run=pythonscript` path hung on this machine without logs, so prefer an open editor session unless that is fixed.
 4. Verify imported assets under `/Game/RaviCircuit`.
 
 ## Replacement Targets
@@ -29,4 +29,3 @@ The game currently runs from C++ generated primitives and optional imported sour
 - Zara Vey: agile magnetic kickboxer, cyan/gold/charcoal technical gear, fast silhouette.
 - Hamza Kade: heavy pressure grappler, red/green/charcoal reinforced fabric, broad silhouette.
 - Noorabad Rooftop: nighttime rooftop arena, wet concrete, cyan/amber neon, arches, patterned metalwork, city haze.
-

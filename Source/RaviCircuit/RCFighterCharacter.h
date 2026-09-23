@@ -23,18 +23,18 @@ public:
 
 	UPROPERTY(BlueprintReadOnly) FRCFighterSpec Spec;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<ARCFighterCharacter> Opponent;
-	UPROPERTY(BlueprintReadOnly) ERCFighterState FightState = ERCFighterState::Idle;
-	UPROPERTY(BlueprintReadOnly) int32 PlayerIndex = 0;
-	UPROPERTY(BlueprintReadOnly) bool bCPU = false;
-	UPROPERTY(BlueprintReadOnly) float Facing = 1.f;
-	UPROPERTY(BlueprintReadOnly) int32 Health = 240;
+	UPROPERTY(Replicated, BlueprintReadOnly) ERCFighterState FightState = ERCFighterState::Idle;
+	UPROPERTY(Replicated, BlueprintReadOnly) int32 PlayerIndex = 0;
+	UPROPERTY(Replicated, BlueprintReadOnly) bool bCPU = false;
+	UPROPERTY(Replicated, BlueprintReadOnly) float Facing = 1.f;
+	UPROPERTY(Replicated, BlueprintReadOnly) int32 Health = 240;
 	UPROPERTY(BlueprintReadOnly) int32 MaxHealth = 240;
-	UPROPERTY(BlueprintReadOnly) float Meter = 30.f;
-	UPROPERTY(BlueprintReadOnly) bool bRage = false;
-	UPROPERTY(BlueprintReadOnly) int32 ComboCount = 0;
-	UPROPERTY(BlueprintReadOnly) int32 ComboDamage = 0;
-	UPROPERTY(BlueprintReadOnly) FString LastMoveName;
-	UPROPERTY(BlueprintReadOnly) bool bLastHitWasCounter = false;
+	UPROPERTY(Replicated, BlueprintReadOnly) float Meter = 30.f;
+	UPROPERTY(Replicated, BlueprintReadOnly) bool bRage = false;
+	UPROPERTY(Replicated, BlueprintReadOnly) int32 ComboCount = 0;
+	UPROPERTY(Replicated, BlueprintReadOnly) int32 ComboDamage = 0;
+	UPROPERTY(Replicated, BlueprintReadOnly) FString LastMoveName;
+	UPROPERTY(Replicated, BlueprintReadOnly) bool bLastHitWasCounter = false;
 	UPROPERTY(BlueprintReadOnly) TArray<FString> InputHistory;
 
 	void Configure(const FRCFighterSpec& InSpec, int32 InPlayerIndex, bool bInCPU, ARaviCircuitGameMode* InGame);
@@ -46,6 +46,7 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -87,6 +88,12 @@ private:
 	FName AiPlan = NAME_None;
 
 	void SetMoveInput(FName MoveId);
+	void InputPunch();
+	void InputKick();
+	void InputLow();
+	void InputThrow();
+	void InputSpecial();
+	void InputSuper();
 	void SetBlockPressed();
 	void SetBlockReleased();
 	void AxisForward(float Value);
@@ -108,4 +115,10 @@ private:
 	void AnimatePose(float DeltaSeconds);
 	bool TouchingWall(float AttackerFacing) const;
 	float DistanceToOpponent() const;
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetMoveInput(FName MoveId);
+
+	UFUNCTION(Server, Unreliable)
+	void ServerSyncInput(float InInputX, float InInputSide, bool bInBlockDown, bool bInCrouching, bool bInJumpQueued);
 };

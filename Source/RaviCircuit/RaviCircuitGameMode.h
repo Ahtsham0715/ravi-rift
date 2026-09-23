@@ -16,7 +16,9 @@ enum class ERCMatchMode : uint8
 {
 	ArcadeCPU,
 	LocalVersus,
-	Training
+	Training,
+	OnlineHost,
+	OnlineClient
 };
 
 UCLASS()
@@ -46,12 +48,16 @@ public:
 	void SpawnWallSplat(const FVector& Location);
 	void SetCameraShake(float Amount);
 	void StartMatch(ERCMatchMode NewMode);
+	void HostOnlineMatch();
+	void JoinOnlineMatch(const FString& Address = TEXT("127.0.0.1"));
 	FString HudLine() const;
 	FString FrontEndLine() const;
 	FString MatchResultLine() const;
 	FString TrainingFrameLine() const;
 
 	virtual void BeginPlay() override;
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Tick(float DeltaSeconds) override;
 
 private:
@@ -64,6 +70,8 @@ private:
 	FString MatchResult;
 	bool bTrainingDummyGuard = false;
 	bool bTrainingDummyLowGuard = false;
+	ERCMatchMode StartupMode = ERCMatchMode::ArcadeCPU;
+	bool bStartMatchOnBeginPlay = false;
 	UPROPERTY() TObjectPtr<USoundBase> ImpactLightSound;
 	UPROPERTY() TObjectPtr<USoundBase> ImpactHeavySound;
 	UPROPERTY() TObjectPtr<USoundBase> BlockSound;

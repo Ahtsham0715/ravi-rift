@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Net/UnrealNetwork.h"
 
 namespace
 {
@@ -22,6 +23,8 @@ namespace
 ARCFighterCharacter::ARCFighterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+	SetReplicateMovement(true);
 	GetCapsuleComponent()->InitCapsuleSize(44.f, 96.f);
 	GetCharacterMovement()->GravityScale = 2.25f;
 	GetCharacterMovement()->AirControl = 0.42f;
@@ -76,19 +79,15 @@ void ARCFighterCharacter::ResetForRound(const FVector& Location)
 void ARCFighterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	if (PlayerIndex != 0)
-	{
-		return;
-	}
 	PlayerInputComponent->BindAxis("P1Forward", this, &ARCFighterCharacter::AxisForward);
 	PlayerInputComponent->BindAxis("P1Right", this, &ARCFighterCharacter::AxisRight);
 	PlayerInputComponent->BindAxis("P1Side", this, &ARCFighterCharacter::AxisSide);
-	PlayerInputComponent->BindAction("P1Punch", IE_Pressed, this, &ARCFighterCharacter::SetMoveInput, FName("Punch"));
-	PlayerInputComponent->BindAction("P1Kick", IE_Pressed, this, &ARCFighterCharacter::SetMoveInput, FName("Kick"));
-	PlayerInputComponent->BindAction("P1Low", IE_Pressed, this, &ARCFighterCharacter::SetMoveInput, FName("Low"));
-	PlayerInputComponent->BindAction("P1Throw", IE_Pressed, this, &ARCFighterCharacter::SetMoveInput, FName("Throw"));
-	PlayerInputComponent->BindAction("P1Special", IE_Pressed, this, &ARCFighterCharacter::SetMoveInput, FName("Special"));
-	PlayerInputComponent->BindAction("P1Super", IE_Pressed, this, &ARCFighterCharacter::SetMoveInput, FName("Super"));
+	PlayerInputComponent->BindAction("P1Punch", IE_Pressed, this, &ARCFighterCharacter::InputPunch);
+	PlayerInputComponent->BindAction("P1Kick", IE_Pressed, this, &ARCFighterCharacter::InputKick);
+	PlayerInputComponent->BindAction("P1Low", IE_Pressed, this, &ARCFighterCharacter::InputLow);
+	PlayerInputComponent->BindAction("P1Throw", IE_Pressed, this, &ARCFighterCharacter::InputThrow);
+	PlayerInputComponent->BindAction("P1Special", IE_Pressed, this, &ARCFighterCharacter::InputSpecial);
+	PlayerInputComponent->BindAction("P1Super", IE_Pressed, this, &ARCFighterCharacter::InputSuper);
 	PlayerInputComponent->BindAction("P1Block", IE_Pressed, this, &ARCFighterCharacter::SetBlockPressed);
 	PlayerInputComponent->BindAction("P1Block", IE_Released, this, &ARCFighterCharacter::SetBlockReleased);
 }
@@ -96,6 +95,15 @@ void ARCFighterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 void ARCFighterCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	if (IsLocallyControlled() && !HasAuthority())
+	{
+		ServerSyncInput(InputX, InputSide, bBlockButtonDown, bCrouching, bJumpQueued);
+	}
+	if (!HasAuthority())
+	{
+		AnimatePose(DeltaSeconds);
+		return;
+	}
 	if (Health <= 0)
 	{
 		FightState = ERCFighterState::KO;
@@ -173,6 +181,11 @@ void ARCFighterCharacter::AxisSide(float Value)
 
 void ARCFighterCharacter::SetMoveInput(FName MoveId)
 {
+	if (!HasAuthority())
+	{
+		ServerSetMoveInput(MoveId);
+		return;
+	}
 	if (FightState == ERCFighterState::Knockdown && KnockdownFrames < 54 && (MoveId == "Kick" || MoveId == "Low" || MoveId == "Special"))
 	{
 		KnockdownFrames = 0;
@@ -209,6 +222,36 @@ void ARCFighterCharacter::SetMoveInput(FName MoveId)
 		return;
 	}
 	StartMove(MoveId);
+}
+
+void ARCFighterCharacter::InputPunch()
+{
+	SetMoveInput("Punch");
+}
+
+void ARCFighterCharacter::InputKick()
+{
+	SetMoveInput("Kick");
+}
+
+void ARCFighterCharacter::InputLow()
+{
+	SetMoveInput("Low");
+}
+
+void ARCFighterCharacter::InputThrow()
+{
+	SetMoveInput("Throw");
+}
+
+void ARCFighterCharacter::InputSpecial()
+{
+	SetMoveInput("Special");
+}
+
+void ARCFighterCharacter::InputSuper()
+{
+	SetMoveInput("Super");
 }
 
 void ARCFighterCharacter::SetBlockPressed()
@@ -591,4 +634,34 @@ bool ARCFighterCharacter::TouchingWall(float AttackerFacing) const
 float ARCFighterCharacter::DistanceToOpponent() const
 {
 	return Opponent ? FVector::Dist(GetActorLocation(), Opponent->GetActorLocation()) : 99999.f;
+}
+
+void ARCFighterCharacter::ServerSetMoveInput_Implementation(FName MoveId)
+{
+	SetMoveInput(MoveId);
+}
+
+void ARCFighterCharacter::ServerSyncInput_Implementation(float InInputX, float InInputSide, bool bInBlockDown, bool bInCrouching, bool bInJumpQueued)
+{
+	InputX = FMath::Clamp(InInputX, -1.f, 1.f);
+	InputSide = FMath::Clamp(InInputSide, -1.f, 1.f);
+	bBlockButtonDown = bInBlockDown;
+	bCrouching = bInCrouching;
+	bJumpQueued = bJumpQueued || bInJumpQueued;
+}
+
+void ARCFighterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ARCFighterCharacter, FightState);
+	DOREPLIFETIME(ARCFighterCharacter, PlayerIndex);
+	DOREPLIFETIME(ARCFighterCharacter, bCPU);
+	DOREPLIFETIME(ARCFighterCharacter, Facing);
+	DOREPLIFETIME(ARCFighterCharacter, Health);
+	DOREPLIFETIME(ARCFighterCharacter, Meter);
+	DOREPLIFETIME(ARCFighterCharacter, bRage);
+	DOREPLIFETIME(ARCFighterCharacter, ComboCount);
+	DOREPLIFETIME(ARCFighterCharacter, ComboDamage);
+	DOREPLIFETIME(ARCFighterCharacter, LastMoveName);
+	DOREPLIFETIME(ARCFighterCharacter, bLastHitWasCounter);
 }

@@ -36,5 +36,7 @@ if [[ -z "$ENGINE_ROOT" ]]; then
 fi
 
 echo "Using Unreal Engine at: $ENGINE_ROOT"
-"$ENGINE_ROOT/Engine/Build/BatchFiles/Mac/GenerateProjectFiles.sh" -project="$PROJECT" -game
-"$ENGINE_ROOT/Engine/Build/BatchFiles/Mac/Build.sh" RaviCircuitEditor Mac Development -Project="$PROJECT" -WaitMutex
+pushd "$ENGINE_ROOT/Engine/Build/BatchFiles/Mac" >/dev/null
+./GenerateProjectFiles.sh -project="$PROJECT" -game
+./Build.sh RaviCircuitEditor Mac Development -Project="$PROJECT" -WaitMutex
+popd >/dev/null
