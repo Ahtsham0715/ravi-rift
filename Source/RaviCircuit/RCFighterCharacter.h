@@ -6,6 +6,8 @@
 #include "RCFighterCharacter.generated.h"
 
 class ARaviCircuitGameMode;
+class UBillboardComponent;
+class UTexture2D;
 
 DECLARE_MULTICAST_DELEGATE_FourParams(FRCHitEvent, class ARCFighterCharacter*, class ARCFighterCharacter*, const FRCMoveData&, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FRCSuperEvent, class ARCFighterCharacter*, const FRCMoveData&);
@@ -61,6 +63,7 @@ private:
 	UPROPERTY() TObjectPtr<UStaticMeshComponent> LeftLeg;
 	UPROPERTY() TObjectPtr<UStaticMeshComponent> RightLeg;
 	UPROPERTY() TObjectPtr<UStaticMeshComponent> Sash;
+	UPROPERTY() TObjectPtr<UBillboardComponent> FighterArt;
 
 	FRCMoveData CurrentMove;
 	FName CurrentMoveId = NAME_None;
@@ -112,6 +115,7 @@ private:
 	void BuildVisuals();
 	UStaticMeshComponent* AddPart(const TCHAR* Name, UStaticMesh* Mesh, UMaterialInterface* Mat, FVector Loc, FVector Scale);
 	UMaterialInstanceDynamic* MakeMaterial(FLinearColor Color, float Emission);
+	UTexture2D* LoadSourcePng(const TCHAR* SourceArtRelativePath);
 	void AnimatePose(float DeltaSeconds);
 	bool TouchingWall(float AttackerFacing) const;
 	float DistanceToOpponent() const;

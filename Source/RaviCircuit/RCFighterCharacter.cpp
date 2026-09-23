@@ -2,15 +2,21 @@
 
 #include "RaviCircuitGameMode.h"
 #include "Camera/CameraShakeBase.h"
+#include "Components/BillboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
 #include "Net/UnrealNetwork.h"
 
 namespace
@@ -588,6 +594,29 @@ void ARCFighterCharacter::BuildVisuals()
 	AddPart(TEXT("LeftBoot"), Cube, Trim, FVector(22, -27, 12), FVector(0.34f, 0.18f, 0.12f) * S);
 	AddPart(TEXT("RightBoot"), Cube, Trim, FVector(22, 27, 12), FVector(0.34f, 0.18f, 0.12f) * S);
 	Sash = AddPart(TEXT("Sash"), Cube, Trim, FVector(-6, 0, 111), FVector(0.10f, bPowerBuild ? 0.95f : 0.78f, 0.065f) * S);
+	if (UTexture2D* Concept = LoadSourcePng(PlayerIndex == 0 ? TEXT("Concepts/zara_vey_concept.png") : TEXT("Concepts/hamza_kade_concept.png")))
+	{
+		FighterArt = NewObject<UBillboardComponent>(this, TEXT("GeneratedFighterArt"));
+		FighterArt->RegisterComponent();
+		FighterArt->AttachToComponent(BodyRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		FighterArt->SetSprite(Concept);
+		FighterArt->bIsScreenSizeScaled = false;
+		FighterArt->ScreenSize = 0.0025f;
+		FighterArt->OpacityMaskRefVal = 0.08f;
+		FighterArt->SetRelativeLocation(FVector(-26.f, 0.f, 140.f));
+		FighterArt->SetRelativeScale3D(FVector(2.25f * S, 2.25f * S, 2.25f * S));
+		FighterArt->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		TArray<USceneComponent*> Children;
+		BodyRoot->GetChildrenComponents(false, Children);
+		for (USceneComponent* Child : Children)
+		{
+			if (Child && Child != FighterArt)
+			{
+				Child->SetVisibility(false, true);
+			}
+		}
+	}
 }
 
 UStaticMeshComponent* ARCFighterCharacter::AddPart(const TCHAR* Name, UStaticMesh* Mesh, UMaterialInterface* Mat, FVector Loc, FVector Scale)
@@ -618,6 +647,38 @@ UMaterialInstanceDynamic* ARCFighterCharacter::MakeMaterial(FLinearColor Color, 
 	return Mat;
 }
 
+UTexture2D* ARCFighterCharacter::LoadSourcePng(const TCHAR* SourceArtRelativePath)
+{
+	const FString SourcePath = FPaths::Combine(FPaths::ProjectDir(), TEXT("SourceArt"), SourceArtRelativePath);
+	TArray<uint8> CompressedData;
+	if (!FFileHelper::LoadFileToArray(CompressedData, *SourcePath))
+	{
+		return nullptr;
+	}
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
+	TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+	if (!ImageWrapper.IsValid() || !ImageWrapper->SetCompressed(CompressedData.GetData(), CompressedData.Num()))
+	{
+		return nullptr;
+	}
+	TArray<uint8> RawData;
+	if (!ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, RawData))
+	{
+		return nullptr;
+	}
+	UTexture2D* Texture = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
+	if (!Texture || !Texture->GetPlatformData() || Texture->GetPlatformData()->Mips.Num() == 0)
+	{
+		return nullptr;
+	}
+	void* TextureData = Texture->GetPlatformData()->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
+	FMemory::Memcpy(TextureData, RawData.GetData(), RawData.Num());
+	Texture->GetPlatformData()->Mips[0].BulkData.Unlock();
+	Texture->UpdateResource();
+	Texture->AddToRoot();
+	return Texture;
+}
+
 void ARCFighterCharacter::AnimatePose(float DeltaSeconds)
 {
 	const float T = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.f;
@@ -630,6 +691,12 @@ void ARCFighterCharacter::AnimatePose(float DeltaSeconds)
 	const bool bKickPose = CurrentMoveId == "Kick" || CurrentMoveId == "Low" || CurrentMoveId == "Special";
 	RightLeg->SetRelativeRotation(FMath::RInterpTo(RightLeg->GetRelativeRotation(), FRotator(bKickPose ? -62.f * AttackAlpha : 0.f, 0.f, 0.f), DeltaSeconds, 10.f));
 	Torso->SetRelativeRotation(FMath::RInterpTo(Torso->GetRelativeRotation(), FRotator(0.f, 0.f, -14.f * Facing * AttackAlpha + 10.f * StunAlpha), DeltaSeconds, 9.f));
+	if (FighterArt)
+	{
+		const float ArtLean = -3.f * Facing + 10.f * AttackAlpha * Facing - 8.f * StunAlpha * Facing;
+		FighterArt->SetRelativeRotation(FMath::RInterpTo(FighterArt->GetRelativeRotation(), FRotator(0.f, 0.f, ArtLean), DeltaSeconds, 9.f));
+		FighterArt->SetRelativeLocation(FVector(-26.f + 12.f * AttackAlpha * Facing, 0.f, 140.f + (bCrouching ? -24.f : 0.f)));
+	}
 	const float Knock = FightState == ERCFighterState::Knockdown || FightState == ERCFighterState::KO ? 82.f * Facing : 0.f;
 	BodyRoot->SetRelativeRotation(FMath::RInterpTo(BodyRoot->GetRelativeRotation(), FRotator(0.f, 0.f, Knock), DeltaSeconds, 6.f));
 	BodyRoot->SetRelativeScale3D(FVector(1.f, 1.f, bCrouching && FightState == ERCFighterState::Idle ? 0.72f : 1.f));

@@ -139,6 +139,10 @@
   - Disabled local split-screen via `bUseSplitscreen=False`; local P2 remains controlled from the shared fight camera instead of spawning a second viewport.
   - Moved skyline blocks far behind the arena with deterministic placement and removed camera-facing foreground rails/props that were blocking the fight view.
   - Added extra primitive fighter silhouette details: shoulders, gloves, boots, face guard, chest plate and emissive trim. These are still placeholders, not final skeletal characters.
+- Second UE 5.6 visual triage after user confirmed gameplay still looked primitive:
+  - `ARCFighterCharacter` now loads generated full-body concept PNGs from `SourceArt/Concepts` and displays them as in-world billboards.
+  - The primitive fighter body pieces are hidden when generated art loads, while gameplay/collision remains unchanged.
+  - `BuildArena()` is stripped down for gameplay readability: no skyline blocks, no back rail, no reactive props, and no center obstruction between camera and fighters.
 - `Docs/AssetPipeline.md` describes import steps and replacement targets for real skeletal/static mesh assets after Unreal Editor is available.
 - Static cleanup performed:
   - Engine entry map is used instead of a missing project map.
